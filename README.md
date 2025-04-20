@@ -1,63 +1,147 @@
-# 汉字描红练习工具
+# 汉字描红练习应用
 
-这是一个基于cnchar库开发的汉字描红练习网页工具，支持多种描红模式和完成提示功能。
+这是一个交互式汉字描红练习应用，帮助用户学习汉字书写。应用提供静态描红、动态描红和自主练习三种模式，支持PC和手机设备，并提供即时反馈与动画效果。
 
-## 功能特性
+## 🎯 主要功能
 
-- ✅ 静态描红：显示汉字笔画结构
-- ✨ 动态描红：动画展示书写过程
-- 🖊️ 自主练习：可交互式描红练习
-- 🎉 完成提示：练习完成后显示鼓励信息和烟花效果
-- 🔊 音效反馈：
-    - 每笔完成时播放笔刷音效
-    - 全部完成后播放欢呼音效
-- 📏 大字版：适合儿童和初学者使用
-- 🖥️ 纯前端实现，无需后端支持
+### 1. 静态描红
+- 展示汉字轮廓供用户描摹
+- 支持多字练习
+- 根据设备自动调整横/竖排布局
 
-## 文件说明
+### 2. 动态描红
+- 动画展示汉字笔画书写过程
+- 通过动画清晰展示笔画顺序和方向
+- 完成后显示烟花特效
 
-| 文件名 | 说明 |
-|--------|------|
-| `draw-chinese.html` | 基础版描红工具 |
-| `draw-chinese-red.html` | 红色主题描红工具 |
-| `draw-chinese-large.html` | 大字版描红工具 |
-| `draw-chinese-congrats.html` | 带完成提示和音效的描红工具 |
-| `cnchar.all.min.js` | cnchar库本地文件 |
-| `sounds/` | 存放音效文件的目录 |
+### 3. 自主练习
+- 用户主动书写汉字
+- 笔画正确性实时反馈
+- 完成后提供成功提示和特效
 
-## 使用说明
+## 📱 设备兼容
 
-1. 下载所有文件和`sounds`文件夹到同一目录
-2. 用浏览器打开 `draw-chinese-congrats.html` 文件
-3. 在输入框中输入要练习的汉字
-4. 选择描红模式：
-   - **静态描红**：查看汉字结构
-   - **动态描红**：观看书写动画
-   - **自主练习**：交互式描红练习，带有完成提示和音效
+- **PC端**：横排布局，适合宽屏显示
+- **手机端**：竖排布局，优化触摸操作
 
-## 自定义选项
+## 🛠️ 技术实现
 
-- 修改HTML文件中的style部分可调整：
-  - 描红格子大小（`length`参数）
-  - 颜色主题（`strokeColor`等参数）
-  - 提示信息样式
-- 替换 `sounds/` 文件夹中的音频文件来自定义音效
+- 使用**cnchar**库处理汉字数据和书写功能
+- 纯前端JavaScript实现，无后端依赖
+- 本地存储汉字笔画数据，避免网络请求
+- 模块化设计，便于扩展新功能
 
-## 依赖
+## 📦 项目结构
 
-- [cnchar](https://github.com/theajack/cnchar) - 汉字拼音笔画库
+```
+write-zh-char/
+├── js/                  # JavaScript模块
+│   ├── config.js        # 基础配置和通用函数
+│   ├── core.js          # 核心绘图功能
+│   ├── effects.js       # 特效和音效
+│   ├── static-draw.js   # 静态描红功能
+│   ├── animate-draw.js  # 动态描红功能
+│   ├── test-draw.js     # 自主练习功能
+│   └── main.js          # 主程序入口
+├── css/                 # 样式文件
+│   └── styles.css       # 主样式表
+├── data/                # 本地数据
+│   └── dict/            # 汉字笔画数据JSON文件
+├── sounds/              # 音效文件
+├── cnchar.all.min.js    # cnchar核心库
+├── draw-chinese-congrats.html  # 主页面
+├── package.json         # 项目依赖配置
+└── README.md            # 项目说明文档
+```
 
-## 许可证
+## 🚀 安装与使用
 
-MIT
+### 前提条件
+- Node.js (推荐v14或更高版本)
+- npm或yarn包管理器
+- 现代浏览器 (Chrome, Firefox, Safari, Edge等)
 
-## 未来想法
+### 安装步骤
 
-- 💡 **动态笔画音效 (暂未实现):** 
-    - **目标:** 根据书写笔画的长度或类型（横、竖、撇、捺等）播放不同长度或质感的音效，增强真实感和趣味性。
-    - **挑战:** `cnchar.draw` 的 `onTestStatus` 回调函数提供的信息主要包含当前汉字索引 (`index`)、测试状态 (`status` 如 'mistake', 'correct', 'complete') 以及原始汉字数据 (`data`)。该回调似乎不直接提供刚刚完成的 *那一笔* 的详细几何信息（如长度、类型、坐标）。它更多是报告用户书写行为的 *测试结果*。
-    - **替代方案 (可行):** 
-        1. 准备多个不同的笔刷音效文件 (如 `brush-short.mp3`, `brush-medium.mp3`, `brush-long.mp3` 或不同质感的声音)。
-        2. 在 `onTestStatus` 检测到一笔正确完成时 (如 `status.status !== 'mistake'`)，从准备好的多个音效文件中**随机选择一个**来播放。
-        3. 虽然不能精确匹配笔画特性，但能有效打破单调感，增加声音的丰富度。
-    - **进一步探索:** 如果想实现更精确的匹配，可能需要深入研究 `cnchar.draw` 内部使用的 `HanziWriter` 库，查看是否有更底层的事件或方法能提供笔画的详细信息，但这会增加实现的复杂度。
+1. **克隆仓库**
+   ```bash
+   git clone <仓库地址>
+   cd write-zh-char
+   ```
+
+2. **安装依赖**
+   ```bash
+   npm install
+   ```
+
+3. **复制汉字数据文件**
+   ```bash
+   # 创建数据目录
+   mkdir -p data/dict
+
+   # 复制汉字数据文件
+   cp -r node_modules/cnchar-data/draw/*.json data/dict/
+   ```
+   > 注意：Windows系统下请使用`xcopy`命令：`xcopy node_modules\cnchar-data\draw\*.json data\dict\ /Y`
+
+4. **启动本地服务器**
+   ```bash
+   # 如果安装了http-server
+   http-server
+   
+   # 或者使用Python内置的HTTP服务器
+   python -m http.server
+   ```
+
+5. **访问应用**
+   - 打开浏览器访问 `http://localhost:8000/draw-chinese-congrats.html`
+
+### 使用指南
+
+1. **输入汉字**：在顶部文本框中输入想要练习的汉字
+2. **选择模式**：
+   - 点击"静态描红"按钮使用描红模式
+   - 点击"动态描红"按钮观看书写动画
+   - 点击"自主练习"按钮开始练习
+
+## 🔧 自定义配置
+
+- **修改样式**：编辑`css/styles.css`文件
+- **调整动画速度**：在`js/animate-draw.js`中修改相关参数
+- **增加新功能**：可在`js/`目录下创建新模块，并在`main.js`中引入
+
+## 📘 汉字数据说明
+
+应用使用`cnchar-data`包中的汉字笔画数据，包含约9500个常用汉字，每个汉字对应一个JSON文件，存储于`data/dict/`目录。
+
+每个JSON文件包含以下信息：
+- 汉字编码
+- 笔画数量
+- 每个笔画的坐标点
+- 笔画类型（横、竖、撇、捺等）
+
+## 🤝 贡献指南
+
+欢迎贡献代码，提交问题或建议：
+
+1. Fork项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建Pull Request
+
+## 📝 开发注意事项
+
+- PC/手机使用不同的布局方式，通过`isDevicePC()`函数判断
+- 添加新功能时建议创建独立模块并按依赖顺序引入
+- 本地data/dict目录存储汉字数据，避免网络请求和CORS问题
+
+## 📄 许可证
+
+[MIT License](LICENSE)
+
+## 📞 联系方式
+
+如有问题或建议，请通过以下方式联系：
+- 电子邮件：[your-email@example.com]
+- GitHub Issues：[项目Issues页面]
