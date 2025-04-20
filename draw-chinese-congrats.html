@@ -143,6 +143,10 @@
             const container = document.getElementById('draw-container');
             container.innerHTML = '';
             
+            // 初始化每个字的状态数组和完成标志
+            let completionStatus = new Array(hanzi.length).fill(false);
+            let hasCongratulated = false;
+
             const writer = cnchar.draw(hanzi, {
                 el: container,
                 type: cnchar.draw.TYPE.TEST,
@@ -154,52 +158,66 @@
                     highlightColor: '#ff9999'
                 },
                 test: {
-                    onComplete: function() {
-                        const congrats = document.getElementById('congrats-message');
-                        congrats.style.display = 'block';
-                        // 添加烟花效果元素
-                        const fireworks = document.createElement('div');
-                        fireworks.id = 'fireworks';
-                        fireworks.style.position = 'fixed';
-                        fireworks.style.top = '0';
-                        fireworks.style.left = '0';
-                        fireworks.style.width = '100%';
-                        fireworks.style.height = '100%';
-                        fireworks.style.pointerEvents = 'none';
-                        fireworks.style.zIndex = '99';
-                        document.body.appendChild(fireworks);
-
-                        // 创建烟花粒子
-                        for (let i = 0; i < 50; i++) {
-                            setTimeout(() => {
-                                const particle = document.createElement('div');
-                                particle.style.position = 'absolute';
-                                particle.style.width = '6px';
-                                particle.style.height = '6px';
-                                particle.style.borderRadius = '50%';
-                                particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-                                particle.style.left = `${Math.random() * 100}%`;
-                                particle.style.top = `${Math.random() * 100}%`;
-                                particle.style.boxShadow = '0 0 10px 2px currentColor';
-                                fireworks.appendChild(particle);
-
-                                // 粒子动画
-                                const anim = particle.animate([
-                                    { transform: 'scale(1)', opacity: 1 },
-                                    { transform: 'scale(3)', opacity: 0 }
-                                ], {
-                                    duration: 1000 + Math.random() * 1000,
-                                    easing: 'cubic-bezier(0,0.2,0.8,1)'
-                                });
-
-                                anim.onfinish = () => particle.remove();
-                            }, i * 100);
+                    onTestStatus: function(status) {
+                        // 如果当前字完成，更新状态数组
+                        if (status.status === 'complete') {
+                            completionStatus[status.index] = true;
                         }
 
-                        setTimeout(() => {
-                            congrats.style.display = 'none';
-                            fireworks.remove();
-                        }, 2000);
+                        // 检查是否所有字都已完成
+                        const allComplete = completionStatus.every(val => val === true);
+
+                        // 如果所有字都完成且尚未恭喜过
+                        if (allComplete && !hasCongratulated) {
+                            hasCongratulated = true; // 设置已恭喜标志
+
+                            const congrats = document.getElementById('congrats-message');
+                            congrats.style.display = 'block';
+                            
+                            // 添加烟花效果元素
+                            const fireworks = document.createElement('div');
+                            fireworks.id = 'fireworks';
+                            fireworks.style.position = 'fixed';
+                            fireworks.style.top = '0';
+                            fireworks.style.left = '0';
+                            fireworks.style.width = '100%';
+                            fireworks.style.height = '100%';
+                            fireworks.style.pointerEvents = 'none';
+                            fireworks.style.zIndex = '99';
+                            document.body.appendChild(fireworks);
+
+                            // 创建烟花粒子
+                            for (let i = 0; i < 50; i++) {
+                                setTimeout(() => {
+                                    const particle = document.createElement('div');
+                                    particle.style.position = 'absolute';
+                                    particle.style.width = '6px';
+                                    particle.style.height = '6px';
+                                    particle.style.borderRadius = '50%';
+                                    particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                                    particle.style.left = `${Math.random() * 100}%`;
+                                    particle.style.top = `${Math.random() * 100}%`;
+                                    particle.style.boxShadow = '0 0 10px 2px currentColor';
+                                    fireworks.appendChild(particle);
+
+                                    // 粒子动画
+                                    const anim = particle.animate([
+                                        { transform: 'scale(1)', opacity: 1 },
+                                        { transform: 'scale(3)', opacity: 0 }
+                                    ], {
+                                        duration: 1000 + Math.random() * 1000,
+                                        easing: 'cubic-bezier(0,0.2,0.8,1)'
+                                    });
+
+                                    anim.onfinish = () => particle.remove();
+                                }, i * 100);
+                            }
+
+                            setTimeout(() => {
+                                congrats.style.display = 'none';
+                                fireworks.remove();
+                            }, 2000);
+                        }
                     }
                 }
             });
