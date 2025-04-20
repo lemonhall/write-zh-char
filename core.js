@@ -5,6 +5,7 @@ let charWidth, charHeight;
 let isMobile = false;
 let characterData = {};
 let currentStroke = 0;
+let useDummyData = true; // 使用虚拟数据，因为实际数据文件不存在
 
 // 初始化函数
 function initDrawing(container, width, height) {
@@ -30,22 +31,59 @@ function initDrawing(container, width, height) {
     };
 }
 
+// 生成模拟汉字数据
+function generateDummyData(char) {
+    // 生成简单的模拟数据
+    // 这不是真实的汉字笔画数据，仅用于演示
+    
+    const numStrokes = char === '你' ? 7 : (char === '好' ? 6 : 5);
+    
+    const strokes = [];
+    for (let i = 0; i < numStrokes; i++) {
+        strokes.push({
+            path: `M ${200 + i * 50} ${200} L ${400 - i * 30} ${400 + i * 20}`,
+            medians: [[200 + i * 50, 200], [400 - i * 30, 400 + i * 20]]
+        });
+    }
+    
+    return {
+        character: char,
+        strokes: strokes
+    };
+}
+
 // 加载汉字数据
 async function loadCharacterData(char) {
     try {
-        if (!characterData[char]) {
-            const response = await fetch(`characters/${char}.json`);
-            if (!response.ok) {
-                throw new Error(`无法加载汉字数据: ${response.status}`);
+        if (useDummyData) {
+            // 使用模拟数据
+            if (!characterData[char]) {
+                characterData[char] = generateDummyData(char);
             }
-            characterData[char] = await response.json();
+            currentChar = char;
+            currentStroke = 0;
+            return characterData[char];
+        } else {
+            // 尝试加载真实数据（但这些文件实际不存在）
+            if (!characterData[char]) {
+                try {
+                    const response = await fetch(`characters/${char}.json`);
+                    if (!response.ok) {
+                        throw new Error(`无法加载汉字数据: ${response.status}`);
+                    }
+                    characterData[char] = await response.json();
+                } catch (error) {
+                    console.warn(`加载汉字 ${char} 数据失败，使用模拟数据`);
+                    characterData[char] = generateDummyData(char);
+                }
+            }
+            currentChar = char;
+            currentStroke = 0;
+            return characterData[char];
         }
-        currentChar = char;
-        currentStroke = 0;
-        return characterData[char];
     } catch (error) {
         console.error('加载汉字数据错误:', error);
-        return null;
+        return generateDummyData(char); // 出错时返回模拟数据
     }
 }
 

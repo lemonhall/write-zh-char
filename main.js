@@ -23,27 +23,85 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 默认执行静态描红
     drawStatic();
+    
+    // 添加错误处理
+    window.addEventListener('error', function(event) {
+        console.warn('捕获到错误:', event.error);
+        // 防止错误传播
+        event.preventDefault();
+    });
 });
 
-// 动态描红函数 (从animate-draw.js调用相关功能)
+// 动态描红函数 (优先使用cnchar库)
 function drawAnimate() {
     const hanzi = getCurrentHanzi();
     const container = clearContainer();
+    const isPC = isDevicePC();
     
-    // 根据屏幕尺寸设置宽高
-    const { length } = getDeviceSizeConfig();
-    const width = length * 1.2;
-    const height = length * 1.2;
-    
-    if (hanzi && hanzi.length > 0) {
-        // 为每个汉字创建单独的动画区域
+    if (isPC) {
+        // PC版本：横排显示
+        const { length, padding } = getDeviceSizeConfig();
+        
+        const writer = cnchar.draw(hanzi, {
+            el: container,
+            type: cnchar.draw.TYPE.ANIMATION,
+            style: {
+                length: length,
+                padding: padding,
+                outlineColor: '#ffcccc',
+                strokeColor: '#cc0000',
+                currentColor: '#ff3333'
+            },
+            animation: {
+                strokeAnimationSpeed: 1,
+                delayBetweenStrokes: 1000
+            }
+        });
+        
+        // 添加动画完成事件（如有需要）
+        if (writer && typeof writer.animationEnd === 'function') {
+            writer.animationEnd(() => {
+                // 创建烟花效果
+                try {
+                    createFireworks(document.body);
+                } catch (e) {
+                    console.warn('创建烟花效果失败:', e);
+                }
+            });
+        }
+    } else {
+        // 手机版本：竖排显示
+        // 创建竖排布局容器
+        const verticalContainer = document.createElement('div');
+        verticalContainer.className = 'vertical-layout';
+        container.appendChild(verticalContainer);
+        
+        // 根据设备选择合适的尺寸
+        const { length, padding } = getDeviceSizeConfig();
+        
+        // 为每个汉字创建单独的容器并逐个绘制
+        const writers = [];
         for (let i = 0; i < hanzi.length; i++) {
             const charContainer = document.createElement('div');
-            charContainer.className = 'drawing-container';
-            container.appendChild(charContainer);
+            verticalContainer.appendChild(charContainer);
             
-            // 初始化动态描红
-            initAnimatedTracing(charContainer, width, height, hanzi[i]);
+            const writer = cnchar.draw(hanzi[i], {
+                el: charContainer,
+                type: cnchar.draw.TYPE.ANIMATION,
+                style: {
+                    length: length,
+                    padding: padding,
+                    outlineColor: '#ffcccc',
+                    strokeColor: '#cc0000',
+                    currentColor: '#ff3333'
+                },
+                animation: {
+                    strokeAnimationSpeed: 1,
+                    delayBetweenStrokes: 1000
+                }
+            });
+            
+            writers.push(writer);
         }
     }
 }
@@ -84,18 +142,11 @@ function drawTest() {
     let completionStatus = new Array(hanzi.length).fill(false);
     let hasCongratulated = false;
 
-    // 创建 Audio 对象
-    const strokeSound = new Audio('sounds/brush-sound.mp3');
-    const cheerSound = new Audio('sounds/cheering.mp3');
-    strokeSound.preload = 'auto';
-    cheerSound.preload = 'auto';
-    
     // 处理笔画测试状态回调
     function handleTestStatus(status, charIndex) {
         // 播放笔画声音 (如果不是错误状态)
         if (status.status !== 'mistake') {
-            strokeSound.currentTime = 0;
-            strokeSound.play().catch(err => console.warn('无法播放声音:', err));
+            playSound('stroke');
         }
         
         // 如果当前字完成，更新状态数组
@@ -111,14 +162,18 @@ function drawTest() {
             hasCongratulated = true; // 设置已恭喜标志
 
             // 播放欢呼声
-            cheerSound.play().catch(err => console.warn('无法播放声音:', err));
+            playSound('complete');
 
             // 显示恭喜消息
             const congrats = document.getElementById('congrats-message');
             congrats.style.display = 'block';
             
             // 创建简单烟花效果
-            createFireworks(document.body);
+            try {
+                createFireworks(document.body);
+            } catch (e) {
+                console.warn('创建烟花效果失败:', e);
+            }
 
             // 3秒后隐藏消息
             setTimeout(() => {
