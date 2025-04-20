@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汉字描红-完成提示版</title>
     <!-- 样式表：包含所有UI相关样式 -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/styles.css">
     <!-- 引入cnchar汉字处理库，提供汉字书写功能 -->
     <script src="cnchar.all.min.js"></script>
 </head>
@@ -27,39 +27,46 @@
     代码结构说明:
     -----------------------------------------------------
     该应用采用模块化设计，将不同功能拆分到独立文件中：
+    - 所有JS文件存放在js文件夹
+    - 所有CSS文件存放在css文件夹
     
-    1. config.js - 基础配置和通用函数
+    1. js/config.js - 基础配置和通用函数
        - 设备检测
        - 尺寸配置
        - 通用DOM操作
     
-    2. core.js - 核心绘图功能
+    2. js/core.js - 核心绘图功能
        - 画布操作
        - 汉字数据加载
        - 基础绘制函数
     
-    3. effects.js - 特效和音效
+    3. js/effects.js - 特效和音效
        - 声音播放
        - 动画效果
        - 烟花特效
     
-    4. static-draw.js - 静态描红功能
+    4. js/static-draw.js - 静态描红功能
        - 静态描红绘制
        - 横/竖排布局处理
     
-    5. animate-draw.js - 动态描红功能
+    5. js/animate-draw.js - 动态描红功能
        - 笔画动画
        - 动画控制
     
-    6. test-draw.js - 自主练习功能
+    6. js/test-draw.js - 自主练习功能
        - 笔画测试
        - 成绩评估
        - 触摸交互
     
-    7. main.js - 主程序入口
+    7. js/main.js - 主程序入口
        - 初始化应用
        - 事件绑定
        - 功能整合
+    
+    8. css/styles.css - 样式表
+       - 所有UI相关样式
+       - 响应式设计
+       - 动画效果
     
     依赖关系: config.js → core.js → effects.js → 功能模块 → main.js
     
@@ -71,12 +78,12 @@
     -->
     
     <!-- 按依赖顺序加载JS模块 -->
-    <script src="config.js"></script>
-    <script src="core.js"></script>
-    <script src="effects.js"></script>
-    <script src="static-draw.js"></script>
-    <script src="animate-draw.js"></script>
-    <script src="test-draw.js"></script>
-    <script src="main.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/static-draw.js"></script>
+    <script src="js/animate-draw.js"></script>
+    <script src="js/test-draw.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
   "dependencies": {
     "cnchar": "^3.2.6",
     "cnchar-code": "^3.2.6",
+    "cnchar-data": "^1.1.0",
     "cnchar-draw": "^3.2.6",
     "cnchar-explain": "^3.2.6",
     "cnchar-idiom": "^3.2.6",
