@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字可视化绘制</title>
+    <script src="https://fastly.jsdelivr.net/npm/cnchar-all/cnchar.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #draw-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        input {
+            padding: 8px;
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>汉字可视化绘制</h1>
+    <div>
+        <input type="text" id="hanzi-input" placeholder="输入汉字" value="你好">
+        <button id="draw-btn">绘制</button>
+        <button id="animate-btn">动画绘制</button>
+        <button id="test-btn">测试模式</button>
+    </div>
+    <div id="draw-container"></div>
+
+    <script>
+        document.getElementById('draw-btn').addEventListener('click', function() {
+            const hanzi = document.getElementById('hanzi-input').value || '你好';
+            const container = document.getElementById('draw-container');
+            container.innerHTML = '';
+            
+            cnchar.draw(hanzi, {
+                el: container,
+                type: cnchar.draw.TYPE.NORMAL,
+                style: {
+                    length: 60,
+                    padding: 10
+                }
+            });
+        });
+
+        document.getElementById('animate-btn').addEventListener('click', function() {
+            const hanzi = document.getElementById('hanzi-input').value || '你好';
+            const container = document.getElementById('draw-container');
+            container.innerHTML = '';
+            
+            const writer = cnchar.draw(hanzi, {
+                el: container,
+                type: cnchar.draw.TYPE.ANIMATION,
+                style: {
+                    length: 60,
+                    padding: 10
+                },
+                animation: {
+                    strokeAnimationSpeed: 1,
+                    delayBetweenStrokes: 1000
+                }
+            });
+            
+            writer.startAnimation();
+        });
+
+        document.getElementById('test-btn').addEventListener('click', function() {
+            const hanzi = document.getElementById('hanzi-input').value || '你好';
+            const container = document.getElementById('draw-container');
+            container.innerHTML = '';
+            
+            cnchar.draw(hanzi, {
+                el: container,
+                type: cnchar.draw.TYPE.TEST,
+                style: {
+                    length: 60,
+                    padding: 10
+                }
+            });
+        });
+
+        // 默认绘制"你好"
+        document.getElementById('draw-btn').click();
+    </script>
+</body>
+</html>
