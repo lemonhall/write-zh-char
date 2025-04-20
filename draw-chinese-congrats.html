@@ -55,10 +55,31 @@
             transform: translate(-50%, -50%);
             background-color: #4CAF50;
             color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
             z-index: 100;
+            font-size: 24px;
+            text-align: center;
+            animation: popIn 0.5s ease-out;
+        }
+        
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            80% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .emoji {
+            font-size: 32px;
+            margin: 0 5px;
+            display: inline-block;
+            animation: bounce 0.5s infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
         }
     </style>
 </head>
@@ -71,7 +92,9 @@
         <button id="test-btn">自主练习</button>
     </div>
     <div id="draw-container"></div>
-    <div id="congrats-message">恭喜你！都写对了！</div>
+    <div id="congrats-message">
+        <span class="emoji">🎉</span> 恭喜你！都写对了！ <span class="emoji">🎊</span>
+    </div>
 
     <script>
         document.getElementById('draw-btn').addEventListener('click', function() {
@@ -134,8 +157,48 @@
                     onComplete: function() {
                         const congrats = document.getElementById('congrats-message');
                         congrats.style.display = 'block';
+                        // 添加烟花效果元素
+                        const fireworks = document.createElement('div');
+                        fireworks.id = 'fireworks';
+                        fireworks.style.position = 'fixed';
+                        fireworks.style.top = '0';
+                        fireworks.style.left = '0';
+                        fireworks.style.width = '100%';
+                        fireworks.style.height = '100%';
+                        fireworks.style.pointerEvents = 'none';
+                        fireworks.style.zIndex = '99';
+                        document.body.appendChild(fireworks);
+
+                        // 创建烟花粒子
+                        for (let i = 0; i < 50; i++) {
+                            setTimeout(() => {
+                                const particle = document.createElement('div');
+                                particle.style.position = 'absolute';
+                                particle.style.width = '6px';
+                                particle.style.height = '6px';
+                                particle.style.borderRadius = '50%';
+                                particle.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                                particle.style.left = `${Math.random() * 100}%`;
+                                particle.style.top = `${Math.random() * 100}%`;
+                                particle.style.boxShadow = '0 0 10px 2px currentColor';
+                                fireworks.appendChild(particle);
+
+                                // 粒子动画
+                                const anim = particle.animate([
+                                    { transform: 'scale(1)', opacity: 1 },
+                                    { transform: 'scale(3)', opacity: 0 }
+                                ], {
+                                    duration: 1000 + Math.random() * 1000,
+                                    easing: 'cubic-bezier(0,0.2,0.8,1)'
+                                });
+
+                                anim.onfinish = () => particle.remove();
+                            }, i * 100);
+                        }
+
                         setTimeout(() => {
                             congrats.style.display = 'none';
+                            fireworks.remove();
                         }, 2000);
                     }
                 }
