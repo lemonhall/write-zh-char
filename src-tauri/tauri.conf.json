@@ -38,5 +38,10 @@
       "../dist/data/**/*.json",
       "../dist/sounds/*"
     ]
+  },
+  "tauri": {
+    "android": {
+      "targets": ["aarch64-linux-android"]
+    }
   }
 }
