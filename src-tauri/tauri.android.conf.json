@@ -1,0 +1,15 @@
+{
+  "plugins": {
+    "mobile": {
+      "android": {
+        "targets": ["aarch64"],
+        "signingConfig": {
+          "storeFile": "hanzi-writer.keystore",
+          "storePassword": "ebDfP2T2G584kPPt5Skz",
+          "keyAlias": "hanziwriter",
+          "keyPassword": "ebDfP2T2G584kPPt5Skz"
+        }
+      }
+    }
+  }
+} 

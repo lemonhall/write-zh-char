@@ -1,0 +1,5 @@
+{
+  "identifier": "com.hanzi.writer",
+  "targets": ["aarch64"],
+  "permissions": []
+} 

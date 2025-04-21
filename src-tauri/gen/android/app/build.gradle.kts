@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -24,6 +25,25 @@ android {
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val keystoreProperties = Properties()
+            if (keystorePropertiesFile.exists()) {
+                try {
+                    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                    keyAlias = keystoreProperties["keyAlias"] as String? ?: error("keyAlias not found in keystore.properties")
+                    keyPassword = keystoreProperties["keyPassword"] as String? ?: error("keyPassword not found in keystore.properties")
+                    storeFile = file(keystoreProperties["storeFile"] as String? ?: error("storeFile not found in keystore.properties"))
+                    storePassword = keystoreProperties["storePassword"] as String? ?: error("storePassword not found in keystore.properties")
+                } catch (e: Exception) {
+                    throw InvalidUserDataException("Failed to load keystore properties: ${e.message}", e)
+                }
+            } else {
+                throw InvalidUserDataException("keystore.properties not found at ${keystorePropertiesFile.absolutePath}")
+            }
+        }
+    }
     buildTypes {
         getByName("debug") {
             manifestPlaceholders["usesCleartextTraffic"] = "true"
@@ -37,6 +57,7 @@ android {
             }
         }
         getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
