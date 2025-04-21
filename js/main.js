@@ -1,16 +1,35 @@
 // 主程序入口文件
 
+// 使用已存在的isTauri变量，不再重复声明
+// const isTauri = window.tauriApi ? window.tauriApi.isTauri : false;
+
 // 页面加载完成后执行初始化
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // 初始化声音
     initSounds();
     
     // 配置cnchar，使用本地数据
     if (typeof cnchar !== 'undefined' && cnchar.draw) {
         try {
-            // 先设置本地数据路径（必须在loadLocalMode之前）
-            console.log('设置cnchar数据路径为./data/dict/');
-            cnchar.draw.setResourceBase('./data/dict/');
+            // 设置数据路径
+            let dataPath = './data/dict/';
+            
+            // 如果在Tauri环境中，使用资源目录
+            if (window.tauriApi && window.tauriApi.isTauri) {
+                try {
+                    // 获取资源目录中的路径
+                    dataPath = await window.tauriApi.getResourcePath('data/dict/');
+                    console.log('使用Tauri资源路径:', dataPath);
+                } catch (tauriError) {
+                    console.warn('获取Tauri资源目录失败:', tauriError);
+                }
+            } else {
+                console.log('在浏览器环境中运行，使用相对路径:', dataPath);
+            }
+            
+            // 先设置本地数据路径
+            console.log('设置cnchar数据路径为:', dataPath);
+            cnchar.draw.setResourceBase(dataPath);
             
             // 完全禁用网络请求
             console.log('启用cnchar本地模式');
@@ -22,14 +41,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.warn('已拦截对cnchar-data的网络请求:', url);
                     // 将URL修改为本地路径
                     const charCode = url.split('/').pop();
-                    url = `./data/dict/${charCode}`;
+                    
+                    // 根据环境选择正确的路径
+                    let newUrl = window.tauriApi && window.tauriApi.isTauri
+                        ? `${dataPath}${charCode}` 
+                        : `./data/dict/${charCode}`;
+                        
+                    url = newUrl;
                     console.log('已重定向到本地路径:', url);
                 }
                 return originalXHROpen.call(this, method, url, ...args);
             };
             
-            // 启用本地模式
-            cnchar.draw.loadLocalMode();
+            // 检查是否有loadLocalMode方法
+            if (typeof cnchar.draw.loadLocalMode === 'function') {
+                cnchar.draw.loadLocalMode();
+            } else {
+                console.log('当前版本的cnchar.draw不支持loadLocalMode方法，已使用资源路径重定向');
+            }
+            
+            console.log('cnchar配置完成');
         } catch (e) {
             console.warn('设置cnchar本地模式失败:', e);
         }

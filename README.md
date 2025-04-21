@@ -30,6 +30,7 @@
 - 纯前端JavaScript实现，无后端依赖
 - 本地存储汉字笔画数据，避免网络请求
 - 模块化设计，便于扩展新功能
+- 使用**Tauri**框架打包为桌面应用，支持Windows、macOS和Linux
 
 ## 📦 项目结构
 
@@ -48,6 +49,12 @@ write-zh-char/
 ├── data/                # 本地数据
 │   └── dict/            # 汉字笔画数据JSON文件
 ├── sounds/              # 音效文件
+├── dist/                # 打包输出目录，用于Tauri构建
+├── src-tauri/           # Tauri相关文件
+│   ├── src/             # Rust源代码
+│   ├── Cargo.toml       # Rust依赖配置
+│   ├── tauri.conf.json  # Tauri配置文件
+│   └── icons/           # 应用图标
 ├── cnchar.all.min.js    # cnchar核心库
 ├── draw-chinese-congrats.html  # 主页面
 ├── package.json         # 项目依赖配置
@@ -61,7 +68,7 @@ write-zh-char/
 - npm或yarn包管理器
 - 现代浏览器 (Chrome, Firefox, Safari, Edge等)
 
-### 安装步骤
+### Web版本安装步骤
 
 1. **克隆仓库**
    ```bash
@@ -96,19 +103,127 @@ write-zh-char/
 5. **访问应用**
    - 打开浏览器访问 `http://localhost:8000/draw-chinese-congrats.html`
 
-### 使用指南
+### Tauri桌面应用开发
 
-1. **输入汉字**：在顶部文本框中输入想要练习的汉字
-2. **选择模式**：
-   - 点击"静态描红"按钮使用描红模式
-   - 点击"动态描红"按钮观看书写动画
-   - 点击"自主练习"按钮开始练习
+#### 前提条件
+Tauri要求安装特定的系统依赖，请根据不同操作系统安装必要组件：
+
+- **Windows**：
+  - [Microsoft Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+  - [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+  - [Rust](https://www.rust-lang.org/tools/install)
+
+- **macOS**：
+  ```bash
+  xcode-select --install
+  brew install rustup
+  rustup-init
+  ```
+
+- **Linux**：
+  ```bash
+  # Ubuntu示例
+  sudo apt update
+  sudo apt install libwebkit2gtk-4.0-dev build-essential curl libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
+
+#### 开发流程
+
+1. **准备构建环境**
+   ```bash
+   # 确保依赖已安装
+   npm install
+   
+   # 准备dist目录
+   mkdir -p dist/data/dict dist/sounds dist/js dist/css
+   cp -r data/dict/* dist/data/dict/
+   cp -r sounds/* dist/sounds/
+   cp -r js/* dist/js/
+   cp -r css/* dist/css/
+   cp cnchar.all.min.js dist/
+   cp draw-chinese-congrats.html dist/index.html
+   ```
+
+2. **开发模式运行Tauri应用**
+   ```bash
+   npm run tauri dev
+   ```
+   这将启动一个开发模式的桌面应用，可以实时测试和调试。
+
+3. **构建桌面应用**
+   ```bash
+   npm run tauri build
+   ```
+   生成的安装程序将位于 `src-tauri/target/release/bundle` 目录。
+
+4. **仅使用可执行文件**
+   构建完成后，可以在 `src-tauri/target/release/` 目录找到独立的可执行文件，可以直接复制使用，无需安装。
+
+## 📋 Tauri配置说明
+
+Tauri配置文件位于 `src-tauri/tauri.conf.json`，包含以下重要配置：
+
+### 应用信息配置
+```json
+{
+  "productName": "HanziWriter",  // 应用名称
+  "version": "1.0.0",           // 应用版本
+  "identifier": "com.hanzi.writer"  // 应用标识符
+}
+```
+
+### 窗口配置
+```json
+"windows": [
+  {
+    "title": "汉字描红练习",  // 窗口标题
+    "width": 1024,         // 窗口宽度
+    "height": 768,         // 窗口高度
+    "resizable": true,     // 是否可调整大小
+    "fullscreen": false,   // 是否全屏
+    "center": true         // 是否居中显示
+  }
+]
+```
+
+### 打包配置
+```json
+"bundle": {
+  "active": true,
+  "targets": ["nsis"],  // 打包格式，如nsis(安装包)、msi等
+  "icon": [            // 应用图标
+    "icons/32x32.png",
+    "icons/128x128.png",
+    "icons/icon.ico"
+  ],
+  "resources": [      // 需要打包的资源文件
+    "../dist/data/**/*.json",
+    "../dist/sounds/*"
+  ]
+}
+```
+
+### 资源加载机制
+
+在Tauri应用中，资源文件的加载路径与普通Web应用不同：
+
+```javascript
+// 在浏览器环境：
+let dataPath = './data/dict/';
+
+// 在Tauri环境：
+if (window.tauriApi && window.tauriApi.isTauri) {
+  dataPath = await window.tauriApi.getResourcePath('data/dict/');
+}
+```
 
 ## 🔧 自定义配置
 
 - **修改样式**：编辑`css/styles.css`文件
 - **调整动画速度**：在`js/animate-draw.js`中修改相关参数
 - **增加新功能**：可在`js/`目录下创建新模块，并在`main.js`中引入
+- **自定义Tauri配置**：编辑`src-tauri/tauri.conf.json`文件
 
 ## 📘 汉字数据说明
 
@@ -135,6 +250,8 @@ write-zh-char/
 - PC/手机使用不同的布局方式，通过`isDevicePC()`函数判断
 - 添加新功能时建议创建独立模块并按依赖顺序引入
 - 本地data/dict目录存储汉字数据，避免网络请求和CORS问题
+- Tauri应用中的路径处理与Web应用不同，需使用`window.tauriApi.getResourcePath`获取资源路径
+- 开发期间建议同时测试Web版本和Tauri版本，确保兼容性
 
 ## 📄 许可证
 

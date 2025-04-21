@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="css/styles.css">
     <!-- 引入cnchar汉字处理库，提供汉字书写功能 -->
     <script src="cnchar.all.min.js"></script>
+    <!-- Tauri API包装器 -->
+    <script src="js/tauri-api.js"></script>
 </head>
 <body>
     <h1>汉字描红-完成提示版</h1>
@@ -67,6 +69,10 @@
        - 所有UI相关样式
        - 响应式设计
        - 动画效果
+    
+    9. js/tauri-api.js - Tauri接口
+       - 资源访问
+       - 兼容性处理
     
     依赖关系: config.js → core.js → effects.js → 功能模块 → main.js
     

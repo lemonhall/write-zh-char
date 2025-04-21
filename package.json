@@ -1,21 +1,21 @@
 {
-  "dependencies": {
-    "cnchar": "^3.2.6",
-    "cnchar-code": "^3.2.6",
-    "cnchar-data": "^1.1.0",
-    "cnchar-draw": "^3.2.6",
-    "cnchar-explain": "^3.2.6",
-    "cnchar-idiom": "^3.2.6",
-    "cnchar-info": "^3.2.6",
-    "cnchar-input": "^3.2.6",
-    "cnchar-name": "^3.2.6",
-    "cnchar-order": "^3.2.6",
-    "cnchar-poly": "^3.2.6",
-    "cnchar-radical": "^3.2.6",
-    "cnchar-random": "^3.2.6",
-    "cnchar-trad": "^3.2.6",
-    "cnchar-voice": "^3.2.6",
-    "cnchar-words": "^3.2.6",
-    "cnchar-xhy": "^3.2.6"
+  "name": "write-zh-char",
+  "version": "1.0.0",
+  "description": "交互式汉字描红练习应用",
+  "main": "draw-chinese-congrats.html",
+  "scripts": {
+    "start": "python -m http.server",
+    "tauri": "tauri"
+  },
+  "keywords": [
+    "汉字",
+    "描红",
+    "学习",
+    "中文"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0"
   }
 }
