@@ -257,10 +257,12 @@ if (window.tauriApi && window.tauriApi.isTauri) {
 
 构建Android APK需要以下环境：
 
-- Android Studio
-- Android SDK
-- Android NDK
+- Android Studio (包含 Android SDK 和 Build-Tools)
+- Android NDK (确保版本与项目兼容)
 - JDK 17
+- **重要**：除了设置 `ANDROID_HOME`, `NDK_HOME`, `JAVA_HOME` 环境变量外，请确保以下命令行工具也位于系统的 `PATH` 环境变量中，以便于构建和问题排查：
+  - `keytool`: 通常位于 `$JAVA_HOME/bin` 目录下。
+  - `apksigner`: 通常位于 `$ANDROID_HOME/build-tools/<version>` 目录下。
 
 ### 2. 设置环境变量
 
@@ -298,83 +300,118 @@ if %ERRORLEVEL% EQU 0 (
 
 ### 3. 初始化Android支持
 
-运行上面创建的脚本，它将执行以下操作：
-- 设置必要的环境变量
-- 初始化Tauri的Android支持
-- 安装Android Rust工具链
+运行上面创建的脚本，或手动执行 `npm run tauri android init`。此步骤会在 `src-tauri/gen/android/` 目录下生成 Gradle 项目结构。
+
+**注意**：此步骤后，签名配置的核心文件之一 `src-tauri/gen/android/app/build.gradle.kts` 会被创建或修改。
+
+### 4. 配置签名密钥库
+
+为了生成已签名的 Release APK，你需要：
+
+1.  **生成密钥库文件**：如果还没有，请使用 `keytool` 生成一个 `.keystore` 文件（例如 `hanzi-writer.keystore`）并将其放置在 `src-tauri/` 目录下。记住你设置的**密钥库密码 (store password)** 和**密钥别名 (key alias)** 以及对应的**密钥密码 (key password)**。
+    ```bash
+    # 示例命令 (在 src-tauri 目录运行)
+    keytool -genkey -v -keystore hanzi-writer.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias hanziwriter
+    ```
+2.  **创建 `keystore.properties` 文件**：在 `src-tauri/gen/android/` 目录下（**注意**：不是 `app` 子目录）创建一个名为 `keystore.properties` 的文本文件。
+3.  **编辑 `keystore.properties`**：填入以下内容，并替换为你自己的信息：
+    ```properties
+    keyAlias=你的密钥别名 # 例如 hanziwriter
+    keyPassword=你的密钥密码 # 对应别名的密码
+    # !!! 关键：相对于 src-tauri/gen/android/ 目录，指向 src-tauri/ 目录下的密钥库文件
+    storeFile=../../../hanzi-writer.keystore
+    storePassword=你的密钥库密码 # 整个 keystore 文件的密码
+    ```
+    **务必确保**：
+    - 密码正确无误，且末尾没有多余空格。
+    - `storeFile` 的相对路径正确指向你的 `.keystore` 文件。
+
+### 5. 构建APK (检查 Gradle 配置)
+
+现在可以运行构建命令：
 
 ```bash
 # Windows
 .\setup-android.bat
-
-# Linux/macOS
-chmod +x setup-android.sh
-./setup-android.sh
 ```
-
-### 4. 手动构建APK
-
-如果您想手动执行构建步骤，可以按照以下顺序执行命令：
-
+或者，如果您配置好了签名，可以直接运行：
 ```bash
-# 初始化Android支持
-npm run tauri android init
-
-# 构建APK
-cd src-tauri
+# 在项目根目录运行
 npm run tauri android build
 ```
 
-### 5. 可能遇到的问题及解决方案
+**首次构建后检查**：Tauri 底层使用 Gradle 构建。构建过程依赖 `src-tauri/gen/android/app/build.gradle.kts` 文件。请打开此文件，检查以下关键配置是否存在且正确：
+
+```kotlin
+// src-tauri/gen/android/app/build.gradle.kts
+
+import java.io.FileInputStream // 确保这个 import 存在
+// ... 其他 imports ...
+
+android {
+    // ...
+    signingConfigs {
+        create("release") {
+            // 检查这里的路径是否正确指向 src-tauri/gen/android/keystore.properties
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            // ... 确保加载 keystore.properties 的逻辑存在 ...
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            // !!! 关键：确保这一行存在且没有被注释 !!!
+            signingConfig = signingConfigs.getByName("release")
+            // ... 其他 release 配置 ...
+        }
+        // ... debug 配置 ...
+    }
+    // ...
+}
+```
+如果缺少 `signingConfigs` 块或 `release` 中的 `signingConfig = ...` 行，请参考上面示例手动添加或取消注释。
+
+### 6. 常见问题与排查
 
 #### 环境变量问题
 
-如果遇到环境变量相关错误，可以将环境变量设置为系统环境变量：
-
-```bat
-@echo off
-REM 设置系统环境变量（需要管理员权限）
-
-setx ANDROID_HOME "E:\Android\SDK" /M
-setx NDK_HOME "E:\Android\SDK\ndk\29.0.13113456" /M
-setx JAVA_HOME "E:\development\jdk17" /M
-
-echo 系统环境变量已设置，请重新启动命令提示符或PowerShell以使更改生效。
-pause
-```
-
-> 注意：此脚本需要以管理员权限运行。右键点击并选择"以管理员身份运行"。
+*   **`keytool`/`apksigner` 找不到**：确认 JDK `bin` 目录和 Android SDK `build-tools` 目录已添加到系统 `PATH`。
+*   **SDK/NDK/JDK 路径错误**：检查 `ANDROID_HOME`, `NDK_HOME`, `JAVA_HOME` 环境变量是否指向正确的安装位置。
 
 #### 下载速度慢
 
-如果下载Rust工具链或其他组件速度慢，可以：
-
-1. 设置HTTP代理（如上脚本所示）
-2. 使用国内Rust镜像源：
-   ```
-   # 在用户目录下创建或编辑.cargo/config文件
-   [source.crates-io]
-   replace-with = 'ustc'
-
-   [source.ustc]
-   registry = "https://mirrors.ustc.edu.cn/crates.io-index"
-   ```
+*   **下载 Gradle 依赖或 Rust 工具链慢**：
+    *   尝试设置 `HTTP_PROXY` 和 `HTTPS_PROXY` 环境变量。
+    *   配置 Cargo 使用国内镜像源 (编辑 `~/.cargo/config` 或 `%USERPROFILE%\.cargo\config`)。
 
 #### 构建失败
 
-如果构建失败，请检查：
+*   **生成 unsigned APK**：
+    *   检查 `src-tauri/gen/android/app/build.gradle.kts` 文件，确认 `signingConfigs` 块存在，并且 `buildTypes.release` 中有 `signingConfig = signingConfigs.getByName("release")`。
+    *   确认 `src-tauri/gen/android/keystore.properties` 文件存在且内容正确。
+*   **`keystore.properties not found` 错误**：
+    *   确认文件确实在 `src-tauri/gen/android/` 目录下。
+    *   检查 `build.gradle.kts` 中 `rootProject.file(...)` 的路径是否正确（应为 `"keystore.properties"`）。
+*   **`Keystore file '...' not found` 错误**：
+    *   检查 `keystore.properties` 文件中的 `storeFile` 相对路径是否正确（通常是 `../../../hanzi-writer.keystore`）。
+    *   确认 `.keystore` 文件本身存在于 `src-tauri/` 目录。
+*   **`keystore password was incorrect` 或 `Failed to read key ...` 错误**：
+    *   仔细检查 `keystore.properties` 文件中的 `storePassword` 和 `keyPassword` 是否与生成密钥库时设置的完全一致。
+    *   确保密码末尾没有多余的空格。
+*   **其他 Gradle 错误**：运行 `npm run tauri android build -- --verbose` 查看详细日志进行分析。
 
-1. SDK和NDK版本是否兼容
-2. JDK版本是否正确（推荐JDK 17）
-3. 查看详细的错误日志，定位具体问题
+### 7. 安装和测试
 
-### 6. 安装和测试
+构建成功后，**已签名**的APK文件将位于：`src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk`。
 
-构建成功后，APK文件将位于：`src-tauri/gen/android/app/build/outputs/apk/`目录中。
+您可以使用 `adb` 命令安装：
+```powershell
+# 确保 adb 在 PATH 中，且设备已连接并授权
+adb install .\src-tauri\gen\android\app\build\outputs\apk\universal\release\app-universal-release.apk
+```
 
 您可以：
 - 使用USB连接Android设备并直接安装APK
-- 使用Android模拟器测试应用
 
 ## 📄 许可证
 
