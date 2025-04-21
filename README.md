@@ -248,10 +248,133 @@ if (window.tauriApi && window.tauriApi.isTauri) {
 ## 📝 开发注意事项
 
 - PC/手机使用不同的布局方式，通过`isDevicePC()`函数判断
-- 添加新功能时建议创建独立模块并按依赖顺序引入
-- 本地data/dict目录存储汉字数据，避免网络请求和CORS问题
-- Tauri应用中的路径处理与Web应用不同，需使用`window.tauriApi.getResourcePath`获取资源路径
-- 开发期间建议同时测试Web版本和Tauri版本，确保兼容性
+
+## 📱 Android APK构建指南
+
+要将应用构建为Android APK，需要完成以下步骤：
+
+### 1. 环境准备
+
+构建Android APK需要以下环境：
+
+- Android Studio
+- Android SDK
+- Android NDK
+- JDK 17
+
+### 2. 设置环境变量
+
+创建`setup-android.bat`（Windows）或`setup-android.sh`（Linux/macOS）脚本来设置必要的环境变量：
+
+```bat
+@echo off
+REM 设置环境变量
+set ANDROID_HOME=E:\Android\SDK
+set NDK_HOME=E:\Android\SDK\ndk\29.0.13113456
+set JAVA_HOME=E:\development\jdk17
+
+REM 设置代理（可选，如果需要加速下载）
+set HTTP_PROXY=http://127.0.0.1:7897
+set HTTPS_PROXY=http://127.0.0.1:7897
+set http_proxy=http://127.0.0.1:7897
+set https_proxy=http://127.0.0.1:7897
+set ALL_PROXY=http://127.0.0.1:7897
+
+echo ANDROID_HOME设置为: %ANDROID_HOME%
+echo NDK_HOME设置为: %NDK_HOME%
+echo JAVA_HOME设置为: %JAVA_HOME%
+echo 代理设置为: %HTTP_PROXY%
+
+REM 运行tauri android init命令
+call npm run tauri android init
+
+REM 如果初始化成功，继续构建
+if %ERRORLEVEL% EQU 0 (
+  echo 初始化成功，开始构建Android APK...
+  cd src-tauri
+  call npm run tauri android build
+)
+```
+
+### 3. 初始化Android支持
+
+运行上面创建的脚本，它将执行以下操作：
+- 设置必要的环境变量
+- 初始化Tauri的Android支持
+- 安装Android Rust工具链
+
+```bash
+# Windows
+.\setup-android.bat
+
+# Linux/macOS
+chmod +x setup-android.sh
+./setup-android.sh
+```
+
+### 4. 手动构建APK
+
+如果您想手动执行构建步骤，可以按照以下顺序执行命令：
+
+```bash
+# 初始化Android支持
+npm run tauri android init
+
+# 构建APK
+cd src-tauri
+npm run tauri android build
+```
+
+### 5. 可能遇到的问题及解决方案
+
+#### 环境变量问题
+
+如果遇到环境变量相关错误，可以将环境变量设置为系统环境变量：
+
+```bat
+@echo off
+REM 设置系统环境变量（需要管理员权限）
+
+setx ANDROID_HOME "E:\Android\SDK" /M
+setx NDK_HOME "E:\Android\SDK\ndk\29.0.13113456" /M
+setx JAVA_HOME "E:\development\jdk17" /M
+
+echo 系统环境变量已设置，请重新启动命令提示符或PowerShell以使更改生效。
+pause
+```
+
+> 注意：此脚本需要以管理员权限运行。右键点击并选择"以管理员身份运行"。
+
+#### 下载速度慢
+
+如果下载Rust工具链或其他组件速度慢，可以：
+
+1. 设置HTTP代理（如上脚本所示）
+2. 使用国内Rust镜像源：
+   ```
+   # 在用户目录下创建或编辑.cargo/config文件
+   [source.crates-io]
+   replace-with = 'ustc'
+
+   [source.ustc]
+   registry = "https://mirrors.ustc.edu.cn/crates.io-index"
+   ```
+
+#### 构建失败
+
+如果构建失败，请检查：
+
+1. SDK和NDK版本是否兼容
+2. JDK版本是否正确（推荐JDK 17）
+3. 查看详细的错误日志，定位具体问题
+
+### 6. 安装和测试
+
+构建成功后，APK文件将位于：`src-tauri/gen/android/app/build/outputs/apk/`目录中。
+
+您可以：
+- 使用USB连接Android设备并直接安装APK
+- 使用Android模拟器测试应用
 
 ## 📄 许可证
 
