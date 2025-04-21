@@ -41,7 +41,13 @@
   },
   "tauri": {
     "android": {
-      "targets": ["aarch64-linux-android"]
+      "targets": ["aarch64-linux-android"],
+      "signingConfig": {
+        "storeFile": "hanzi-writer.keystore",
+        "storePassword": "你的keystore密码",
+        "keyAlias": "hanziwriter",
+        "keyPassword": "你的key密码"
+      }
     }
   }
 }
